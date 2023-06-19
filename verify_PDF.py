@@ -1,4 +1,5 @@
 def get_pdf_searchable_pages(fname):
+    # must have pdf miner (pip install pdfminer)
     from pdfminer.pdfpage import PDFPage
     searchable_pages = []
     non_searchable_pages = []
