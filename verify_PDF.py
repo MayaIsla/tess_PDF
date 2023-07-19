@@ -1,70 +1,104 @@
-import importsConfig as cfg
-out = "" #initialize output variable
+import sys
+import logging
+import os
+import errno
 
-def get_pdf_searchable_pages(fname):
-    from pdfminer.pdfpage import PDFPage
-    searchable_pages = []
-    non_searchable_pages = []
-    page_num = 0
+LOG_FILENAME = 'C:/DIR/to/log/new.log'    
+logging.getLogger('PIL').setLevel(logging.WARNING)
 
-
-    with open(fname, 'rb') as infile:
-
-        for page in PDFPage.get_pages(infile):
-            page_num += 1
-            if 'Font' in page.resources.keys():
-                searchable_pages.append(page_num)
-            else:
-                non_searchable_pages.append(page_num)
-    if page_num > 0:
-        if len(searchable_pages) == 0:
-            global out #makes output variable global for all classes to use.
-            out = "no"
-            print(out)
-            return out
-            
-        elif len(non_searchable_pages) == 0:
-            out = "yes"
-            print(out)
-            return out
-    else:
-        out = "invalid"
-        print(out)
-        return out
-
-
-def get_OCR():
+def get_PIC():
     from PIL import Image
     from pdf2image import convert_from_path
     from pytesseract import image_to_string
     from pytesseract import pytesseract
-    converted_scan = convert_from_path(iO ,500,poppler_path='C:/path/to/poppler/bin/folder/bin')
+    import os
     
-    for i in converted_scan:
-        i.save(r'C:\\path\\to\\image_file.png', 'png') #path to saved image
+    logging.debug('I am the culprit!')
+    converted_scan = convert_from_path(iO ,100,poppler_path='C:/dir/to/Poppler/poppler-23.05.0/Library/bin')
+    #converted_scan = convert_from_path(iO)
+    #for entry in os.scandir()
+    
+   
+    logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+    
+    logging.debug('Here')
+    
+    basename = os.path.splitext(os.path.basename(iO))[0]
+    dirc = "C:/dir/to/pdf/" +basename+ "/"
+    dirc3 = "C:/dir/to/pdf/" +basename
 
-    pytesseract.tesseract_cmd = r'C:\\path\\to\\tesseract\\executable\\tesseract.exe' #path to tesseract
-    text = image_to_string(Image.open(r'C:\\path\\to\\image_file.png')) #path to the png file created previously.
-    with open(r'C:\\path\\to\\text_file.txt', 'w') as outfile: #path to the txt file.
-        outfile.write(text.replace('\n\n', '\n'))
+    try:
+        os.makedirs(dirc)
+        dirc2 = [os.path.join(dirc3, f) for f in os.listdir(dirc3) if os.path.isfile(os.path.join(dirc3, f))]
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            print('Directory not created.')
+        else:
+            raise
+        
+    
+    
 
+    pytesseract.tesseract_cmd = 'C:/dir/to/Tesseract/tesseract.exe' #path to tesseract 
 
-def scrape_Text():
-    import tika
-    from tika import parser
+    for i, image  in enumerate(converted_scan):
+        fname = dirc + basename +str(i) +".png"
+        print(fname)
+        logging.debug('Im ded')
+        image.save(fname, "PNG")
 
-    file = parser.from_file(iO)
-    outout = file['content']
-    outout = outout.encode('ascii', errors='ignore')
-    with open(r'C:\\path\\to\\text_file.txt', 'w') as fileout: #path to the txt file.
-        fileout.write(str(outout))
+def get_OCR():
+
+    from PIL import Image
+    from pdf2image import convert_from_path
+    from pytesseract import image_to_string
+    from pytesseract import pytesseract
+    import os
+    
+    #converted_scan = convert_from_path(iO ,100,poppler_path='C:/dir/to/Poppler/poppler-23.05.0/Library/bin')
+    #converted_scan = convert_from_path(iO)
+    #for entry in os.scandir()
+
+    basename = os.path.splitext(os.path.basename(iO))[0]
+    logging.debug('Creating folder...')
+    dirc = "C:/dir/to/pdf/" +basename+ "/"
+    dirc3 = "C:/dir/to/pdf/" +basename
+
+    dirc2 = [os.path.join(dirc3, f) for f in os.listdir(dirc3) if os.path.isfile(os.path.join(dirc3, f))]
+    pytesseract.tesseract_cmd = 'C:/dir/to/Tesseract/tesseract.exe' #path to tesseract 
+    
+    for j, file in enumerate(dirc2):
+        logging.debug('Exporting files...')
+        print("File # " + str(j) + " is being processed...")
+        fname = dirc + basename + str(j) + ".png"
+        text = image_to_string(Image.open(fname))
+        with open(file + ".txt", 'w') as outfile:
+                outfile.write(text)
+
+def garbage_collection():
+
+    basename = os.path.splitext(os.path.basename(iO))[0]
+    dirc = "C:/dir/to/pdf/" +basename+ "/"
+    dirc3 = "C:/dir/to/pdf/" +basename
+    dirc2 = [os.path.join(dirc3, f) for f in os.listdir(dirc3) if os.path.isfile(os.path.join(dirc3, f))]
+    
+    createdDir = os.listdir(dirc)
+    
+    for item in createdDir:
+        if item.endswith(".png"):
+            os.remove(os.path.join(dirc3, item))
+    
+
 
 
 
 if __name__ == '__main__':
-     iO = input("Enter File Path: ")
-     get_pdf_searchable_pages(iO)
-     if out == "no" : get_OCR() #if the pdf is scanned, it will scan for you
-     else: scrape_Text() #otherwise scrape text from pdf.
-
-
+  iO = (sys.argv[1]) # so you can CLI verify_PDF.py "DIR to PDF (must be in quotes for white spaces..)"
+  print("Code Starting...")
+  get_PIC()
+  print("Exporting OCR..")
+  get_OCR()
+  print("Cleaning up...")
+  garbage_collection()
+  
+  
